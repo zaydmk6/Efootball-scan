@@ -169,7 +169,7 @@ async function fetchRealIP(){
         userIP = data.ip;
         document.getElementById('ipAddress').textContent = userIP;
     } catch (e) {
-        userIP = '156.199.188.171';
+        userIP = '196.120.48.122';
         document.getElementById('ipAddress').textContent = userIP;
     }
 }
@@ -246,11 +246,7 @@ function initializeApp(){
     const usersInterval = setInterval(updateOnlineUsers, 5000 + Math.random()*5000); allIntervals.push(usersInterval);
     const newTodayInterval = setInterval(updateNewToday, 30000 + Math.random()*30000); allIntervals.push(newTodayInterval);
     const uptimeInterval = setInterval(updateUptime, 30000); allIntervals.push(uptimeInterval);
-
-    // check cooldown on init
-    checkExistingCooldown();
 }
-
 
 // =================================================================
 // START: Re-integrating Server Logic to Client-Side (Local Execution)
@@ -291,18 +287,12 @@ function analyzePackage(){
         resultMessage = '✅ [النسبة جيدة للفتح]<br><br><strong>GOOD PROBABILITY!</strong><br>🎉 بالتوفيق!<br>🎉 Good luck!<br><br>الوقت مناسب للفتح<br>Perfect time to open the package';
     }
 
-    // Cooldown logic: Server generates the cooldown end time
-    const now = Date.now();
-    const randomCooldown = (120 + Math.random() * 180) * 1000; // 120s - 300s
-    const cooldownEnd = now + Math.floor(randomCooldown);
-
-    return { percentage, resultMessage, resultClass, cooldownEnd };
+    return { percentage, resultMessage, resultClass };
 }
 
 // =================================================================
 // END: Re-integrating Server Logic to Client-Side (Local Execution)
 // =================================================================
-
 
 let userConfig = { deviceType: null, continent: null };
 let currentScanType = '';
@@ -335,31 +325,20 @@ function confirmSetup(){
     document.getElementById('btnShowtime').disabled = false;
     document.getElementById('btnPotw').disabled = false;
     playSuccessBeep();
-
-    // If there's an active cooldown, immediately disable again
-    checkExistingCooldown();
 }
 
 function initiateScan(type){
     if (!isOnline) { playErrorSound(); alert('لا يوجد اتصال بالإنترنت\nNo internet connection'); return; }
-	
-	// Check for maintenance time (now on client-side)
-	if (isMaintenanceTime()) {
-	    document.getElementById('maintenanceModal').style.display = 'flex';
-	    playErrorSound();
-	    return;
-	}
-
-    // prevent starting if cooldown active
-    const cooldownEnd = parseInt(localStorage.getItem('cooldownEnd') || '0');
-    if (Date.now() < cooldownEnd) {
+    
+    // Check for maintenance time (now on client-side)
+    if (isMaintenanceTime()) {
+        document.getElementById('maintenanceModal').style.display = 'flex';
         playErrorSound();
-        alert('يوجد وقت انتظار قبل الفحص التالي. الرجاء الانتظار.');
         return;
     }
 
-	currentScanType = type;
-	startConnection(type);
+    currentScanType = type;
+    startConnection(type);
 }
 
 async function startConnection(scanType){
@@ -373,186 +352,119 @@ async function startConnection(scanType){
 
     wasProcessing = true;
     playConnectSound();
+            
+    // Use the original messages list for the console log
+    const consoleMessages = [
+        'CONNECTING TO SERVER',
+        '[>] Initializing secure connection...',
+        '[>] Establishing encrypted tunnel...',
+        '[>] Connecting to ' + (userConfig.continent || 'Americas') + ' server...',
+        '[>] Device: ' + (userConfig.deviceType || 'Android') + ' detected',
+        '[>] Authenticating credentials...',
+        '[>] Spoofing user agent...',
+        '[>] Bypassing firewall restrictions...',
+        '[>] Exploiting zero-day vulnerability...',
+        '[>] Establishing backdoor access...'
+    ];
 
+    // Start animation and wait for it to finish
+    await new Promise(async (resolve) => {
+        // Calculate total duration (30 to 60 seconds)
+        const totalDuration = Math.floor(Math.random() * (60000 - 30000 + 1)) + 30000;
+        const totalSteps = consoleMessages.length;
+        
+        // Calculate the time to wait between each message (to synchronize with progress bar)
+        const messageDelay = totalDuration / totalSteps;
+        
+        // Start progress bar with the calculated total duration
+        startProgressBar(totalDuration);
+        
+        for (let i = 0; i < consoleMessages.length; i++){
+            if (!isOnline) return;
+            const line = document.createElement('div');
+            line.className = 'console-line';
+            consoleLog.appendChild(line);
 
-		            
+            const isConnecting = consoleMessages[i].includes("CONNECTING TO SERVER") || consoleMessages[i].includes("Connecting to");
+            
+            // Display message
+            await typewriterEffect(line, consoleMessages[i], isConnecting);
 
-		            
-		            // Use the original messages list for the console log
-		            const consoleMessages = [
-		                'CONNECTING TO SERVER',
-		                '[>] Initializing secure connection...',
-		                '[>] Establishing encrypted tunnel...',
-		                '[>] Connecting to ' + (userConfig.continent || 'Americas') + ' server...',
-		                '[>] Device: ' + (userConfig.deviceType || 'Android') + ' detected',
-		                '[>] Authenticating credentials...',
-		                '[>] Spoofing user agent...',
-		                '[>] Bypassing firewall restrictions...',
-		                '[>] Exploiting zero-day vulnerability...',
-		                '[>] Establishing backdoor access...'
-		            ];
-
-	            // Start animation and wait for it to finish
-	            await new Promise(async (resolve) => {
-		                // Calculate total duration (30 to 60 seconds)
-		                const totalDuration = Math.floor(Math.random() * (60000 - 30000 + 1)) + 30000;
-		                const totalSteps = consoleMessages.length;
-		                
-		                // Calculate the time to wait between each message (to synchronize with progress bar)
-		                const messageDelay = totalDuration / totalSteps;
-		                
-		                // Start progress bar with the calculated total duration
-		                startProgressBar(totalDuration);
-		                
-		                for (let i = 0; i < consoleMessages.length; i++){
-		                    if (!isOnline) return;
-		                    const line = document.createElement('div');
-		                    line.className = 'console-line';
-		                    consoleLog.appendChild(line);
-		    
-		                    const isConnecting = consoleMessages[i].includes("CONNECTING TO SERVER") || consoleMessages[i].includes("Connecting to");
-		                    
-		                    // Display message
-		                    await typewriterEffect(line, consoleMessages[i], isConnecting);
-		    
-		                    consoleLog.scrollTop = consoleLog.scrollHeight;
-		                    
-		                    // Wait for the calculated delay to synchronize with the progress bar
-		                    if (i < consoleMessages.length - 1) {
-		                        await sleep(messageDelay);
-		                    }
-		                }
-		                resolve();
-	            });
-
-	            // Once animation is done, execute local analysis
-	            const result = analyzePackage();
-	            connectionSuccess(result);
-	        }
-
-		        async function startProgressBar(duration){
-		            if (!isOnline) return;
-		            const progressBar = document.getElementById('connectionProgress');
-		            const progressFill = document.getElementById('connectionFill');
-		            const progressText = document.getElementById('connectionText');
-		            progressBar.style.display = 'block';
-		            
-		            // Duration is passed from startConnection (30-60 seconds)
-		            const steps = 100;
-		            const stepDuration = duration / steps;
-		            
-		            for (let progress = 0; progress <= 100; progress++){
-		                if (!isOnline) return;
-		                progressFill.style.width = progress + '%';
-		                progressText.textContent = progress + '%';
-		                if (progress % 10 === 0) playTickSound();
-		                await sleep(stepDuration);
-		            }
-		            if (!isOnline) return;
-		            // Do not call connectionSuccess() here, it's called after the console log animation is finished
-		        }
-
-	        function connectionSuccess(result){
-	            // Success animation
-	            playSuccessBeep();
-	            const line = document.createElement('div');
-	            line.className = 'console-line';
-	            line.style.color = '#0f0';
-	            line.style.fontWeight = 'bold';
-	            document.getElementById('consoleLog').appendChild(line);
-	            typewriterEffect(line, '[✓ CONNECTED TO GAME SERVER SUCCESSFULLY]', false).then(()=>{
-	                sleep(1200).then(()=>{
-	                    document.getElementById('connectionModal').style.display = 'none';
-	                    wasProcessing = false;
-	
-	                    // Show results using local data
-	                    showResults(result.percentage, result.resultMessage, result.resultClass, result.cooldownEnd);
-	                });
-	            });
-	        }
-
-// helper to enable/disable scan buttons
-function setScanButtonsEnabled(enabled){
-    document.getElementById('btnEpic').disabled = !enabled;
-    document.getElementById('btnShowtime').disabled = !enabled;
-    document.getElementById('btnPotw').disabled = !enabled;
-}
-
-// apply cooldown UI: show banner and disable buttons
-let cooldownIntervalId = null;
-function applyCooldownUI(cooldownEnd){
-    setScanButtonsEnabled(false);
-
-    const banner = document.getElementById('cooldownBanner');
-    banner.innerHTML = '';
-    const box = document.createElement('div');
-    box.className = 'cooldown-box';
-    banner.appendChild(box);
-
-    function update(){
-        const remaining = Math.max(0, Math.ceil((cooldownEnd - Date.now()) / 1000));
-        const mins = Math.floor(remaining / 60);
-        const secs = remaining % 60;
-        box.textContent = '⏳ [COOL DOWN] ' + mins + ':' + (secs < 10 ? '0' : '') + secs + ' - Please wait';
-        if (remaining <= 0) {
-            clearInterval(cooldownIntervalId);
-            cooldownIntervalId = null;
-            banner.innerHTML = '';
-            localStorage.removeItem('cooldownEnd');
-            // re-enable buttons only if setup already confirmed
-            if (userConfig.deviceType && userConfig.continent) setScanButtonsEnabled(true);
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+            
+            // Wait for the calculated delay to synchronize with the progress bar
+            if (i < consoleMessages.length - 1) {
+                await sleep(messageDelay);
+            }
         }
-    }
+        resolve();
+    });
 
-    update();
-    if (cooldownIntervalId) clearInterval(cooldownIntervalId);
-    cooldownIntervalId = setInterval(update, 1000);
+    // Once animation is done, execute local analysis
+    const result = analyzePackage();
+    connectionSuccess(result);
 }
 
-// check on load if cooldown exists and apply
-function checkExistingCooldown(){
-    const cooldownEnd = parseInt(localStorage.getItem('cooldownEnd') || '0');
-    if (Date.now() < cooldownEnd) {
-        applyCooldownUI(cooldownEnd);
-    } else {
-        // no active cooldown: enable buttons only after setup
-        if (userConfig.deviceType && userConfig.continent) {
-            setScanButtonsEnabled(true);
-        } else {
-            setScanButtonsEnabled(false);
-        }
+async function startProgressBar(duration){
+    if (!isOnline) return;
+    const progressBar = document.getElementById('connectionProgress');
+    const progressFill = document.getElementById('connectionFill');
+    const progressText = document.getElementById('connectionText');
+    progressBar.style.display = 'block';
+    
+    // Duration is passed from startConnection (30-60 seconds)
+    const steps = 100;
+    const stepDuration = duration / steps;
+    
+    for (let progress = 0; progress <= 100; progress++){
+        if (!isOnline) return;
+        progressFill.style.width = progress + '%';
+        progressText.textContent = progress + '%';
+        if (progress % 10 === 0) playTickSound();
+        await sleep(stepDuration);
     }
+    if (!isOnline) return;
 }
 
-function showResults(percentage, resultMessage, resultClass, cooldownEnd){
+function connectionSuccess(result){
+    // Success animation
+    playSuccessBeep();
+    const line = document.createElement('div');
+    line.className = 'console-line';
+    line.style.color = '#0f0';
+    line.style.fontWeight = 'bold';
+    document.getElementById('consoleLog').appendChild(line);
+    typewriterEffect(line, '[✓ CONNECTED TO GAME SERVER SUCCESSFULLY]', false).then(()=>{
+        sleep(1200).then(()=>{
+            document.getElementById('connectionModal').style.display = 'none';
+            wasProcessing = false;
+
+            // Show results using local data
+            showResults(result.percentage, result.resultMessage, result.resultClass);
+        });
+    });
+}
+
+function showResults(percentage, resultMessage, resultClass){
     const modal = document.getElementById('resultsModal');
-	    const percentageDisplay = document.getElementById('percentageDisplay');
-	    const resultMessageElement = document.getElementById('resultMessage');
-	    modal.style.display = 'flex';
-	    percentageDisplay.textContent = percentage + '%';
-	
-	    // Display results from server
-	    resultMessageElement.className = 'result-message ' + resultClass;
-	    resultMessageElement.innerHTML = resultMessage;
-	
-	    // Play sound based on result class
-	    if (resultClass === 'result-bad') playErrorSound();
-	    else if (resultClass === 'result-weak') playTickSound();
-	    else if (resultClass === 'result-medium') playPopSound();
-	    else { playSuccessBeep(); setTimeout(()=>playSuccessBeep(),200); }
-	
-	    // ======= START: Cooldown logic (using server-provided end time) =======
-	    localStorage.setItem('cooldownEnd', cooldownEnd);
-	    // Apply the UI (banner + disabling buttons)
-	    applyCooldownUI(cooldownEnd);
-	    // ======= END: Cooldown logic =======
-	
-	    const autoTelegram = setTimeout(()=>{ openTelegram(); }, 4000);
-	    allTimeouts.push(autoTelegram);
-	
-	    // keep previous cooldown-resume behavior (reload after countdown finished)
-	    // (applyCooldownUI already removes cooldownEnd and re-enables buttons when done)
-	}
+    const percentageDisplay = document.getElementById('percentageDisplay');
+    const resultMessageElement = document.getElementById('resultMessage');
+    modal.style.display = 'flex';
+    percentageDisplay.textContent = percentage + '%';
+
+    // Display results from server
+    resultMessageElement.className = 'result-message ' + resultClass;
+    resultMessageElement.innerHTML = resultMessage;
+
+    // Play sound based on result class
+    if (resultClass === 'result-bad') playErrorSound();
+    else if (resultClass === 'result-weak') playTickSound();
+    else if (resultClass === 'result-medium') playPopSound();
+    else { playSuccessBeep(); setTimeout(()=>playSuccessBeep(),200); }
+
+    const autoTelegram = setTimeout(()=>{ openTelegram(); }, 4000);
+    allTimeouts.push(autoTelegram);
+}
 
 function closeResults(){ playTickSound(); document.getElementById('resultsModal').style.display='none'; }
 function rescanServer(){ 
@@ -561,7 +473,7 @@ function rescanServer(){
     openTelegram();
 }
 function closeMaintenance(){ playTickSound(); document.getElementById('maintenanceModal').style.display='none'; }
-function openTelegram(){ playTickSound(); window.open('https://t.me/pes224', '_blank'); }
+function openTelegram(){ playTickSound(); window.open('https://t.me/+RnNwpcs8QaIwZmRk', '_blank'); }
 
 // if offline initially
 if (!isOnline) handleOffline();
