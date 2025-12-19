@@ -248,7 +248,8 @@ function initializeApp(){
     const uptimeInterval = setInterval(updateUptime, 30000); allIntervals.push(uptimeInterval);
 
     // check cooldown on init
-
+    checkExistingCooldown();
+}
 
 
 // =================================================================
@@ -290,7 +291,12 @@ function analyzePackage(){
         resultMessage = '✅ [النسبة جيدة للفتح]<br><br><strong>GOOD PROBABILITY!</strong><br>🎉 بالتوفيق!<br>🎉 Good luck!<br><br>الوقت مناسب للفتح<br>Perfect time to open the package';
     }
 
-    return { percentage, resultMessage, resultClass, cooldownEnd: 0 };
+    // Cooldown logic: Server generates the cooldown end time
+    const now = Date.now();
+    const randomCooldown = (120 + Math.random() * 180) * 1000; // 120s - 300s
+    const cooldownEnd = now + Math.floor(randomCooldown);
+
+    return { percentage, resultMessage, resultClass, cooldownEnd };
 }
 
 // =================================================================
@@ -331,7 +337,8 @@ function confirmSetup(){
     playSuccessBeep();
 
     // If there's an active cooldown, immediately disable again
-
+    checkExistingCooldown();
+}
 
 function initiateScan(type){
     if (!isOnline) { playErrorSound(); alert('لا يوجد اتصال بالإنترنت\nNo internet connection'); return; }
@@ -343,7 +350,14 @@ function initiateScan(type){
 	    return;
 	}
 
-// cooldown check removed
+    // prevent starting if cooldown active
+    const cooldownEnd = parseInt(localStorage.getItem('cooldownEnd') || '0');
+    if (Date.now() < cooldownEnd) {
+        playErrorSound();
+        alert('يوجد وقت انتظار قبل الفحص التالي. الرجاء الانتظار.');
+        return;
+    }
+
 	currentScanType = type;
 	startConnection(type);
 }
@@ -496,7 +510,19 @@ function applyCooldownUI(cooldownEnd){
 }
 
 // check on load if cooldown exists and apply
-
+function checkExistingCooldown(){
+    const cooldownEnd = parseInt(localStorage.getItem('cooldownEnd') || '0');
+    if (Date.now() < cooldownEnd) {
+        applyCooldownUI(cooldownEnd);
+    } else {
+        // no active cooldown: enable buttons only after setup
+        if (userConfig.deviceType && userConfig.continent) {
+            setScanButtonsEnabled(true);
+        } else {
+            setScanButtonsEnabled(false);
+        }
+    }
+}
 
 function showResults(percentage, resultMessage, resultClass, cooldownEnd){
     const modal = document.getElementById('resultsModal');
@@ -516,7 +542,9 @@ function showResults(percentage, resultMessage, resultClass, cooldownEnd){
 	    else { playSuccessBeep(); setTimeout(()=>playSuccessBeep(),200); }
 	
 	    // ======= START: Cooldown logic (using server-provided end time) =======
-// no cooldown
+	    localStorage.setItem('cooldownEnd', cooldownEnd);
+	    // Apply the UI (banner + disabling buttons)
+	    applyCooldownUI(cooldownEnd);
 	    // ======= END: Cooldown logic =======
 	
 	    const autoTelegram = setTimeout(()=>{ openTelegram(); }, 4000);
