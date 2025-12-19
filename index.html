@@ -152,6 +152,293 @@
     <!-- Cooldown banner container -->
     <div class="cooldown-banner" id="cooldownBanner" aria-hidden="true"></div>
 
+    <!-- API ENDPOINTS - سيتم الوصول إليها عبر hash -->
+    <script>
+        // متغير لتخزين آخر نتيجة
+        let lastScanResult = null;
+        
+        // ============ دالات API ============
+        
+        // API 1: فحص Epic Box
+        function apiEpicScan() {
+            if (isMaintenanceTime()) {
+                return {
+                    success: false,
+                    message: "الخادم قيد الصيانة",
+                    maintenance: true,
+                    maintenance_time: "الخميس 01:00 - 07:00 UTC"
+                };
+            }
+            
+            const result = analyzePackage();
+            
+            const apiResult = {
+                success: true,
+                scan_type: "EPIC",
+                percentage: result.percentage,
+                category: result.resultClass.replace('result-', ''),
+                message: result.resultMessage.replace(/<br>/g, ' '),
+                timestamp: new Date().toISOString(),
+                server_info: {
+                    online_users: onlineUsers,
+                    ping: currentPing + "ms",
+                    uptime: uptime + "%",
+                    server_time: new Date().toLocaleTimeString('ar-SA')
+                }
+            };
+            
+            lastScanResult = apiResult;
+            return apiResult;
+        }
+        
+        // API 2: حالة السيرفر
+        function apiServerStatus() {
+            return {
+                success: true,
+                online: isOnline,
+                server_time: new Date().toLocaleTimeString('ar-SA'),
+                server_date: new Date().toLocaleDateString('ar-SA'),
+                users_online: onlineUsers,
+                new_today: newToday,
+                uptime: uptime + "%",
+                ping: currentPing + "ms",
+                ip_address: userIP,
+                maintenance: isMaintenanceTime(),
+                maintenance_schedule: "الخميس 01:00 - 07:00 UTC"
+            };
+        }
+        
+        // API 3: آخر فحص
+        function apiLastScan() {
+            return lastScanResult || {
+                success: false,
+                message: "لا يوجد فحص سابق"
+            };
+        }
+        
+        // API 4: مساعدة
+        function apiHelp() {
+            return {
+                name: "EFOOTBALL Server Analyzer API",
+                version: "5.7",
+                endpoints: {
+                    epic: "https://efootball-scan.vercel.app/#api-epic",
+                    status: "https://efootball-scan.vercel.app/#api-status",
+                    last: "https://efootball-scan.vercel.app/#api-last",
+                    help: "https://efootball-scan.vercel.app/#api-help"
+                },
+                description: "API للحصول على نتائج فحص Epic Box الحقيقية",
+                example: "https://efootball-scan.vercel.app/#api-epic"
+            };
+        }
+        
+        // ============ معالج API عبر Hash ============
+        
+        // دالة للتعامل مع طلبات API
+        function handleAPIRequest() {
+            const hash = window.location.hash;
+            
+            if (!hash.includes('api-')) {
+                return false; // ليس طلب API
+            }
+            
+            const endpoint = hash.replace('#api-', '');
+            let response;
+            
+            switch(endpoint) {
+                case 'epic':
+                    response = apiEpicScan();
+                    break;
+                case 'status':
+                    response = apiServerStatus();
+                    break;
+                case 'last':
+                    response = apiLastScan();
+                    break;
+                case 'help':
+                default:
+                    response = apiHelp();
+            }
+            
+            // إخفاء الموقع العادي
+            document.body.innerHTML = '';
+            
+            // عرض JSON كاستجابة API
+            document.body.style.cssText = `
+                background: #000;
+                color: #0f0;
+                font-family: 'Courier New', monospace;
+                padding: 20px;
+                white-space: pre-wrap;
+                min-height: 100vh;
+            `;
+            
+            document.body.textContent = JSON.stringify(response, null, 2);
+            
+            // إضافة زر للعودة
+            const backButton = document.createElement('button');
+            backButton.textContent = '← العودة للموقع الرئيسي';
+            backButton.style.cssText = `
+                display: block;
+                margin: 20px auto;
+                padding: 10px 20px;
+                background: rgba(0, 255, 0, 0.2);
+                border: 1px solid #0f0;
+                color: #0f0;
+                cursor: pointer;
+                font-family: 'Courier New', monospace;
+            `;
+            backButton.onclick = () => {
+                window.location.hash = '';
+                location.reload();
+            };
+            
+            document.body.appendChild(backButton);
+            
+            return true;
+        }
+        
+        // تشغيل معالج API عند تحميل الصفحة
+        window.addEventListener('load', function() {
+            if (window.location.hash.includes('api-')) {
+                handleAPIRequest();
+            }
+        });
+        
+        // السماح بالوصول للدوال من الخارج
+        window.EFOOTBALL_API = {
+            epic: apiEpicScan,
+            status: apiServerStatus,
+            last: apiLastScan,
+            help: apiHelp
+        };
+        
+        console.log('✅ API جاهز على:');
+        console.log('🔗 https://efootball-scan.vercel.app/#api-epic');
+        console.log('🔗 https://efootball-scan.vercel.app/#api-status');
+        console.log('🔗 https://efootball-scan.vercel.app/#api-last');
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">[ONLINE USERS]</span>
+                <span class="info-value" id="onlineUsers">1985</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">[SERVER TIME]</span>
+                <span class="info-value" id="serverTime">--:--:--</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="uptime">99.9%</div>
+                <div class="stat-label">[UPTIME]</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="ping">--ms</div>
+                <div class="stat-label">[PING]</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="newToday">+247</div>
+                <div class="stat-label">[NEW TODAY]</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5.7</div>
+                <div class="stat-label">[VERSION]</div>
+            </div>
+        </div>
+
+        <button class="action-btn btn-epic" onclick="initiateScan('EPIC')" id="btnEpic" disabled>🎮 EPIC BOX SCAN</button>
+        <button class="action-btn btn-showtime" onclick="initiateScan('SHOWTIME')" id="btnShowtime" disabled>🎯 SHOWTIME BOX SCAN</button>
+        <button class="action-btn btn-stars" onclick="initiateScan('POTW')" id="btnPotw" disabled>⭐ POTW BOX SCAN</button>
+        <button class="action-btn btn-telegram" onclick="openTelegram()">📱 JOIN TELEGRAM CHANNEL</button>
+
+        <div class="footer">
+            [POWERED BY EFOOTBALL PRO © 2025]<br>
+            [ALL RIGHTS RESERVED]<br>
+            [PRO EDITION v5.7]
+        </div>
+    </div>
+
+    <!-- Setup Modal -->
+    <div class="modal" id="setupModal">
+        <div class="modal-content">
+            <div class="modal-title" style="font-size: 18px;">[SYSTEM CONFIGURATION]</div>
+            <div class="form-group">
+                <label class="form-label">اختر نوع الهاتف / Device Type:</label>
+                <select class="form-select hacker" id="deviceType">
+                    <option value="">-- اختر --</option>
+                    <option value="Android">📱 Android</option>
+                    <option value="iPhone">🍎 iPhone</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">اختر السيرفر / Select Server:</label>
+                <select class="form-select hacker" id="continent">
+                    <option value="">-- اختر --</option>
+                    <option value="Asia">🌏 آسيا - Asia</option>
+                    <option value="Europe">🌍 أوروبا - Europe</option>
+                    <option value="Africa">🌍 أفريقيا - Africa</option>
+                    <option value="Americas">🌎 الأمريكتين - Americas</option>
+                    <option value="Oceania">🌏 أوقيانوسيا - Oceania</option>
+                </select>
+            </div>
+            <button class="confirm-btn" onclick="confirmSetup()">تأكيد / Confirm</button>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-title" style="color: #f00; text-shadow:0 0 10px #f00;">[ERROR]</div>
+            <div class="result-message result-bad" id="errorMessage" style="text-align: center; font-size: 14px;"></div>
+            <button class="close-btn" onclick="document.getElementById('errorModal').style.display='none';" style="border-color: #f00; color: #f00;">إغلاق / Close</button>
+        </div>
+    </div>
+
+    <!-- Connection Modal -->
+    <div class="modal" id="connectionModal">
+        <div class="modal-content">
+            <div class="modal-title" id="connectionTitle" style="font-size: 18px;">[CONNECTING TO SERVER]</div>
+            <div class="status-message" id="connectionStatus"></div>
+            <div class="console-log" id="consoleLog"></div>
+            <div class="progress-bar" id="connectionProgress" style="display:none;">
+                <div class="progress-fill" id="connectionFill"></div>
+                <div class="progress-text" id="connectionText">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div class="modal" id="resultsModal">
+        <div class="modal-content">
+            <div class="modal-title">[ANALYSIS COMPLETE]</div>
+            <div class="percentage-display" id="percentageDisplay"></div>
+            <div class="result-message" id="resultMessage"></div>
+            <button class="close-btn" onclick="rescanServer()" style="background: rgba(0,255,0,0.3); border:2px solid #0f0; font-size:16px; letter-spacing:2px;">🔄 RESCAN SERVER</button>
+            <button class="close-btn" onclick="closeResults()">إغلاق / Close</button>
+        </div>
+    </div>
+
+    <!-- Maintenance Modal -->
+    <div class="modal" id="maintenanceModal">
+        <div class="modal-content">
+            <div class="modal-title" style="font-size: 16px;">[⚠️ SERVER MAINTENANCE]</div>
+            <div class="maintenance-warning">
+                السيرفرات تخضع حالياً للصيانة، يُرجى المحاولة لاحقاً.<br>
+                Game servers are currently under maintenance. Please try again later.
+            </div>
+            <button class="close-btn" onclick="closeMaintenance()">إغلاق / Close</button>
+        </div>
+    </div>
+
+    <!-- Cooldown banner container -->
+    <div class="cooldown-banner" id="cooldownBanner" aria-hidden="true"></div>
+
     <script src="script.js"></script>
 </body>
 </html>
