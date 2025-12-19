@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>EFOOTBALL Server Analyzer PRO</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- No Internet Screen -->
+    <div class="no-internet-screen" id="noInternetScreen">
+        <div class="no-internet-icon">⚠️</div>
+        <div class="no-internet-text">
+            NO INTERNET CONNECTION<br>
+            خطأ في الاتصال بالشبكة، يرجى التحقق من اتصالك<br><br>
+            [PLEASE CHECK YOUR CONNECTION]
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <div class="header">
+            <div class="version-badge">v5.7 PRO</div>
+            <div class="app-title">⚽ EFOOTBALL</div>
+            <div class="app-subtitle">SERVER ANALYZER - PRO EDITION</div>
+        </div>
+
+        <div class="info-card">
+            <div class="info-row">
+                <span class="info-label">[IP ADDRESS]</span>
+                <span class="info-value" id="ipAddress">Loading...</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">[SERVER STATUS]</span>
+                <span class="info-value status-indicator">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="serverStatus">ACTIVE & STABLE</span>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">[ONLINE USERS]</span>
+                <span class="info-value" id="onlineUsers">1985</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">[SERVER TIME]</span>
+                <span class="info-value" id="serverTime">--:--:--</span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="uptime">99.9%</div>
+                <div class="stat-label">[UPTIME]</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="ping">--ms</div>
+                <div class="stat-label">[PING]</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="newToday">+247</div>
+                <div class="stat-label">[NEW TODAY]</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">5.7</div>
+                <div class="stat-label">[VERSION]</div>
+            </div>
+        </div>
+
+        <button class="action-btn btn-epic" onclick="initiateScan('EPIC')" id="btnEpic" disabled>🎮 EPIC BOX SCAN</button>
+        <button class="action-btn btn-showtime" onclick="initiateScan('SHOWTIME')" id="btnShowtime" disabled>🎯 SHOWTIME BOX SCAN</button>
+        <button class="action-btn btn-stars" onclick="initiateScan('POTW')" id="btnPotw" disabled>⭐ POTW BOX SCAN</button>
+        <button class="action-btn btn-telegram" onclick="openTelegram()">📱 JOIN TELEGRAM CHANNEL</button>
+
+        <div class="footer">
+            [POWERED BY EFOOTBALL PRO © 2025]<br>
+            [ALL RIGHTS RESERVED]<br>
+            [PRO EDITION v5.7]
+        </div>
+    </div>
+
+    <!-- Setup Modal -->
+    <div class="modal" id="setupModal">
+        <div class="modal-content">
+            <div class="modal-title" style="font-size: 18px;">[SYSTEM CONFIGURATION]</div>
+            <div class="form-group">
+                <label class="form-label">اختر نوع الهاتف / Device Type:</label>
+                <select class="form-select hacker" id="deviceType">
+                    <option value="">-- اختر --</option>
+                    <option value="Android">📱 Android</option>
+                    <option value="iPhone">🍎 iPhone</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">اختر السيرفر / Select Server:</label>
+                <select class="form-select hacker" id="continent">
+                    <option value="">-- اختر --</option>
+                    <option value="Asia">🌏 آسيا - Asia</option>
+                    <option value="Europe">🌍 أوروبا - Europe</option>
+                    <option value="Africa">🌍 أفريقيا - Africa</option>
+                    <option value="Americas">🌎 الأمريكتين - Americas</option>
+                    <option value="Oceania">🌏 أوقيانوسيا - Oceania</option>
+                </select>
+            </div>
+            <button class="confirm-btn" onclick="confirmSetup()">تأكيد / Confirm</button>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal" id="errorModal">
+        <div class="modal-content">
+            <div class="modal-title" style="color: #f00; text-shadow:0 0 10px #f00;">[ERROR]</div>
+            <div class="result-message result-bad" id="errorMessage" style="text-align: center; font-size: 14px;"></div>
+            <button class="close-btn" onclick="document.getElementById('errorModal').style.display='none';" style="border-color: #f00; color: #f00;">إغلاق / Close</button>
+        </div>
+    </div>
+
+    <!-- Connection Modal -->
+    <div class="modal" id="connectionModal">
+        <div class="modal-content">
+            <div class="modal-title" id="connectionTitle" style="font-size: 18px;">[CONNECTING TO SERVER]</div>
+            <div class="status-message" id="connectionStatus"></div>
+            <div class="console-log" id="consoleLog"></div>
+            <div class="progress-bar" id="connectionProgress" style="display:none;">
+                <div class="progress-fill" id="connectionFill"></div>
+                <div class="progress-text" id="connectionText">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div class="modal" id="resultsModal">
+        <div class="modal-content">
+            <div class="modal-title">[ANALYSIS COMPLETE]</div>
+            <div class="percentage-display" id="percentageDisplay"></div>
+            <div class="result-message" id="resultMessage"></div>
+            <button class="close-btn" onclick="rescanServer()" style="background: rgba(0,255,0,0.3); border:2px solid #0f0; font-size:16px; letter-spacing:2px;">🔄 RESCAN SERVER</button>
+            <button class="close-btn" onclick="closeResults()">إغلاق / Close</button>
+        </div>
+    </div>
+
+    <!-- Maintenance Modal -->
+    <div class="modal" id="maintenanceModal">
+        <div class="modal-content">
+            <div class="modal-title" style="font-size: 16px;">[⚠️ SERVER MAINTENANCE]</div>
+            <div class="maintenance-warning">
+                السيرفرات تخضع حالياً للصيانة، يُرجى المحاولة لاحقاً.<br>
+                Game servers are currently under maintenance. Please try again later.
+            </div>
+            <button class="close-btn" onclick="closeMaintenance()">إغلاق / Close</button>
+        </div>
+    </div>
+
+    <!-- Cooldown banner container -->
+    <div class="cooldown-banner" id="cooldownBanner" aria-hidden="true"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
