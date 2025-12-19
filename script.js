@@ -248,8 +248,7 @@ function initializeApp(){
     const uptimeInterval = setInterval(updateUptime, 30000); allIntervals.push(uptimeInterval);
 
     // check cooldown on init
-    checkExistingCooldown();
-}
+
 
 
 // =================================================================
@@ -332,8 +331,7 @@ function confirmSetup(){
     playSuccessBeep();
 
     // If there's an active cooldown, immediately disable again
-    checkExistingCooldown();
-}
+
 
 function initiateScan(type){
     if (!isOnline) { playErrorSound(); alert('لا يوجد اتصال بالإنترنت\nNo internet connection'); return; }
@@ -498,19 +496,7 @@ function applyCooldownUI(cooldownEnd){
 }
 
 // check on load if cooldown exists and apply
-function checkExistingCooldown(){
-    const cooldownEnd = parseInt(localStorage.getItem('cooldownEnd') || '0');
-    if (Date.now() < cooldownEnd) {
-        applyCooldownUI(cooldownEnd);
-    } else {
-        // no active cooldown: enable buttons only after setup
-        if (userConfig.deviceType && userConfig.continent) {
-            setScanButtonsEnabled(true);
-        } else {
-            setScanButtonsEnabled(false);
-        }
-    }
-}
+
 
 function showResults(percentage, resultMessage, resultClass, cooldownEnd){
     const modal = document.getElementById('resultsModal');
